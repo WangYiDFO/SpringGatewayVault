@@ -1,0 +1,53 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8083/auth/realms/deptA
+  cache:
+    cache-names: base64Header
+    type: simple
+
+
+
+  cloud:
+    gateway:
+      routes:
+        - id: fgp
+          uri: https://gcgeo.gc.ca
+          predicates:
+            - Path=/fgp/**
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+            - AddRequestHeader=Accept, application/xml
+            - StripPrefix=1
+#            - RewritePath=/fgp/?(?<segment>.*), /$\{segment}
+            - name: Base64Header
+              args:
+               kvv2SecretRoot: secret
+               kvv2SecretPath: subholder/fedsearch/fgp
+
+
+vault:
+  endpointUrl: http://127.0.0.1:8200
+  jwtLoginPath: jwt
+  jwtUserRole: default-user
+  kvv2offlineTokenRoot: secret
+  kvv2offlineTokenPath: subholder/batch/offlinetoken
+  kvv2FedSearchBase64SecretRoot: secret
+  kvv2FedSearchBase64SecretPath: subholder/fedsearch
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG
+
+
+management:
+  endpoint:
+    gateway:
+      enabled: true
+    web:
+      exposure:
+        include: gateway
+
